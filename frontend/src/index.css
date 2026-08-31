@@ -1,1 +1,39 @@
 @import "tailwindcss";
+
+:root {
+    --plumarks-primary: #128f96;
+    --plumarks-primary-dark: #125d65;
+    --plumarks-primary-light: #d8f5f5;
+
+    --plumarks-background: #f8fafc;
+    --plumarks-surface: #ffffff;
+
+    --plumarks-text: #0f172a;
+    --plumarks-text-secondary: #475569;
+    --plumarks-text-muted: #94a3b8;
+
+    --plumarks-border: #e2e8f0;
+
+    --plumarks-success: #16a34a;
+    --plumarks-warning: #f59e0b;
+    --plumarks-danger: #dc2626;
+}
+
+@theme {
+    --color-primary: var(--plumarks-primary);
+    --color-primary-dark: var(--plumarks-primary-dark);
+    --color-primary-light: var(--plumarks-primary-light);
+
+    --color-background: var(--plumarks-background);
+    --color-surface: var(--plumarks-surface);
+
+    --color-text: var(--plumarks-text);
+    --color-text-secondary: var(--plumarks-text-secondary);
+    --color-text-muted: var(--plumarks-text-muted);
+
+    --color-border: var(--plumarks-border);
+
+    --color-success: var(--plumarks-success);
+    --color-warning: var(--plumarks-warning);
+    --color-danger: var(--plumarks-danger);
+}

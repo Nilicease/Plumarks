@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginAccount;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterAccount;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -65,5 +67,31 @@ class AuthController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function login(LoginAccount $request)
+    {
+        $credentials = $request->validated();
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        return response()->json([
+            'success' => 'Login successful'
+        ], 200);
+    }
+
+    public function logout(string $id)
+    {
+        Auth::logout();
+
+        return response()->json([
+            'success' => 'Successfully logged out'
+        ], 200);
     }
 }
