@@ -37,3 +37,11 @@
     --color-warning: var(--plumarks-warning);
     --color-danger: var(--plumarks-danger);
 }
+
+body 
+{
+    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+    margin: 0;
+    
+}

@@ -218,3 +218,4 @@ The name represents a student-focused application for managing and monitoring ac
 Currently in development.
 
 The initial goal is to complete the MVP before adding additional features.
+bi
