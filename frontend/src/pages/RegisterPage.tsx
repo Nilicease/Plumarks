@@ -1,19 +1,27 @@
 import { Link } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
-import { useLogin } from "../hooks/useLogin";
+import { useRegister } from "../hooks/useRegister";
 
-export function LoginPage() {
+export function RegisterPage() {
 
     const [
         email,
         setEmail,
+        errorEmail,
         password,
         setPassword,
-        error
-    ] = useLogin()
+        errorPassword,
+        name,
+        setName,
+        age,
+        setAge,
+        passwordconfirmed,
+        setPasswordConfirmed,
+        errorPasswordConfirmed
+    ] = useRegister()
 
-    	return (
+        return (
         <>
             <section className="container h-screen bg-background flex flex-row">
                 <article className="container">
@@ -23,7 +31,21 @@ export function LoginPage() {
                 </article>
                 <article className="bg-surface w-1/2 rounded-4xl m-10 shadow-2xl p-4">
                     <h1 className="text-center pt-4 text-4xl mb-8 italic">Welcome Back!</h1>
-                    <form action="post" className="flex flex-col items-center gap-1">
+                    <form action="post" className="flex flex-col items-center gap-2">
+                        <Input 
+                            type="text"
+                            placeholder="Enter your Full Name 'ex. John Doe'"
+                            required={true}
+                            value={name}
+                            onChange={(event) => setName(event.target.value)}
+                        />
+                        <Input 
+                            type="Number"
+                            placeholder="Enter your Password"
+                            required={true}
+                            value={age}
+                            onChange={(event) => setAge(Number(event.target.value))}
+                        />
                         <Input 
                             type="email"
                             placeholder="Enter your Email"
@@ -32,7 +54,7 @@ export function LoginPage() {
                             onChange={(event) => setEmail(event.target.value)}
                         />
                             <p className="text-danger">
-                                {error}
+                                {errorEmail}
                             </p>
                         <Input 
                             type="password"
@@ -41,9 +63,18 @@ export function LoginPage() {
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                         />
+                        <p>{errorPassword}</p>
+                        <Input 
+                            type="password"
+                            placeholder="Confirm your Password"
+                            required={true}
+                            value={passwordconfirmed}
+                            onChange={(event) => setPasswordConfirmed(event.target.value)}
+                        />
+                        <p>{errorPasswordConfirmed}</p>
                         <Button placeholder="Sign In"/>
-                        <p>Don't have an account?  
-                        <Link to="/register">Sign up here</Link>
+                        <p>Already have an account?  
+                        <Link to="/login">Sign in Here</Link>
                         </p>
                     </form>
                 </article>
