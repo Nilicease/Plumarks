@@ -5,12 +5,19 @@ import { useLogin } from "../hooks/useLogin";
 
 export function LoginPage() {
 
+    async function handleSubmit(event: React.FormEvent) {
+        event.preventDefault();
+
+        await login();
+    }
+
     const [
         email,
         setEmail,
         password,
         setPassword,
-        error
+        error,
+        login
     ] = useLogin()
 
     	return (
@@ -23,7 +30,7 @@ export function LoginPage() {
                 </article>
                 <article className="bg-surface w-1/2 rounded-4xl m-10 shadow-2xl p-4">
                     <h1 className="text-center pt-4 text-4xl mb-8 italic">Welcome Back!</h1>
-                    <form action="post" className="flex flex-col items-center gap-1">
+                    <form onSubmit={handleSubmit} className="flex flex-col items-center gap-1">
                         <Input 
                             type="email"
                             placeholder="Enter your Email"
