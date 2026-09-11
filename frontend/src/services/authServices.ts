@@ -12,3 +12,22 @@ export async function loginUser(
 
     return response.data;
 }
+
+export async function RegisterUser(
+    name: string,
+    age: number,
+    email: string,
+    password: string,
+    passwordconfirmed: string,
+    ) {
+
+    const response = await api.post("/api/createUsercd", {
+        name,
+        age,
+        email,
+        password,
+        passwordconfirmed,
+    });
+
+    return response.data;
+}

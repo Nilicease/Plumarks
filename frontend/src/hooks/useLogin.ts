@@ -11,12 +11,6 @@ export function useLogin() {
             ? "Please include your email '@'"
             : "";
 
-    async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-
-    await login();
-}
-
     async function login() {
         if (emailError) {
             setError(emailError);

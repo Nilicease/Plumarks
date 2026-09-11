@@ -1,13 +1,11 @@
-import type { ChangeEvent } from "react";
+import type { InputHTMLAttributes } from "react";
 
-export function Input({type, placeholder, required, value, onChange}: {type: string, placeholder: string, required: boolean, value: string | number, onChange: (event: ChangeEvent<HTMLInputElement>) => void}) {
+type InputProps = InputHTMLAttributes<HTMLInputElement>
+
+export function Input({ className = "", ...props }: InputProps) {
     return (
-        <input className="p-4 m-2 w-100 rounded-4xl shadow-lg"
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        value={value}
-        onChange={onChange}
+        <input className={`w-full min-h-[50px] rounded-[10px] border border-border bg-[#fbfdfd] px-[15px] text-[0.95rem] text-text outline-none transition duration-150 placeholder:text-text-muted focus:border-primary focus:bg-white focus:shadow-[0_0_0_4px_var(--plumarks-primary-light)] ${className}`}
+        {...props}
         />
     )
 }
