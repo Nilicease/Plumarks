@@ -3,7 +3,7 @@ import type { FormEvent } from "react"
 import type { GradingCategory, SubjectRecord } from "../types/academic"
 import { totalWeight } from "../utils/gradeUtils"
 
-type SaveSubject = (subject: SubjectRecord, editingSubjectName: string | null) => void
+type SaveSubject = (subject: SubjectRecord, editingSubjectName: string | null) => Promise<void>
 
 export function useSubjectForm(onSave: SaveSubject) {
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -14,14 +14,17 @@ export function useSubjectForm(onSave: SaveSubject) {
     ])
     const [nextCategoryId, setNextCategoryId] = useState(101)
     const [editingSubjectName, setEditingSubjectName] = useState<string | null>(null)
+    const [saveError, setSaveError] = useState("")
 
     function openModal() {
         setEditingSubjectName(null)
+        setSaveError("")
         setSubjectName("")
         setTeacherName("")
         setCategories([{ id: nextCategoryId, name: "Exam", weight: 100, subcategories: [] }])
         setNextCategoryId((current) => current + 1)
         setIsModalOpen(true)
+        setSaveError("")
     }
 
     function openEditSubject(subject: SubjectRecord) {
@@ -30,6 +33,7 @@ export function useSubjectForm(onSave: SaveSubject) {
         setTeacherName(subject.teacher === "No teacher added" ? "" : subject.teacher)
         setCategories(subject.categories.map((category) => ({ ...category, subcategories: [...category.subcategories] })))
         setIsModalOpen(true)
+        setSaveError("")
     }
 
     function updateCategory(id: number, field: "name" | "weight", value: string) {
@@ -65,17 +69,23 @@ export function useSubjectForm(onSave: SaveSubject) {
             : category))
     }
 
-    function saveSubject(event: FormEvent<HTMLFormElement>) {
+    async function saveSubject(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         if (!subjectName.trim() || !categories.length || totalWeight(categories) !== 100 || categories.some((category) => !category.name.trim())) return
-        onSave({
-            name: subjectName.trim(),
-            teacher: teacherName.trim() || "No teacher added",
-            color: "#bc6c25",
-            categories: categories.map((category) => ({ ...category, name: category.name.trim(), subcategories: category.subcategories.filter((item) => item.trim()) })),
-        }, editingSubjectName)
-        setIsModalOpen(false)
-        setEditingSubjectName(null)
+        setSaveError("")
+
+        try {
+            await onSave({
+                name: subjectName.trim(),
+                teacher: teacherName.trim() || "No teacher added",
+                color: "#bc6c25",
+                categories: categories.map((category) => ({ ...category, name: category.name.trim(), subcategories: category.subcategories.filter((item) => item.trim()) })),
+            }, editingSubjectName)
+            setIsModalOpen(false)
+            setEditingSubjectName(null)
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : "Unable to save subject.")
+        }
     }
 
     return {
@@ -87,6 +97,7 @@ export function useSubjectForm(onSave: SaveSubject) {
         setTeacherName,
         categories,
         editingSubjectName,
+        saveError,
         gradingSystemValid: totalWeight(categories) === 100 && categories.length > 0,
         openModal,
         openEditSubject,

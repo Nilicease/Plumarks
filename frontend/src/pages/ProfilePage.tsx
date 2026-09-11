@@ -1,10 +1,12 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { ChangeEvent, FormEvent } from "react"
 import { ImagePlus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Topbar } from "../components/Topbar"
 import { PageSkeleton } from "../components/ui/Skeleton"
 import { useAsyncPageLoading } from "../hooks/useAsyncPageLoading"
+import { getAuthenticatedUser, getApiErrorMessage } from "../services/authServices"
+import { useSubjects } from "../hooks/useSubjects"
 
 function getInitials(name: string) {
     return name
@@ -17,14 +19,24 @@ function getInitials(name: string) {
 
 export function ProfilePage() {
     const isLoading = useAsyncPageLoading()
-    const [name, setName] = useState("Jane Doe")
-    const [email, setEmail] = useState("jane@example.com")
-    const [birthDate, setBirthDate] = useState("2005-06-14")
+    const [name, setName] = useState("")
+    const [email, setEmail] = useState("")
+    const [birthDate, setBirthDate] = useState("")
     const [currentPassword, setCurrentPassword] = useState("")
     const [newPassword, setNewPassword] = useState("")
-    const [profileImage, setProfileImage] = useState<string | null>(() => localStorage.getItem("plumarks-profile-image"))
+    const [profileImage, setProfileImage] = useState<string | null>(null)
+    const [userError, setUserError] = useState("")
+    const { subjects } = useSubjects()
     const [imageError, setImageError] = useState("")
     const [saved, setSaved] = useState(false)
+
+    useEffect(() => {
+        void getAuthenticatedUser().then((user) => {
+            setName(`${user.firstname} ${user.lastname}`.trim())
+            setEmail(user.email)
+            setBirthDate(user.birthday)
+        }).catch((error: unknown) => setUserError(getApiErrorMessage(error, "Unable to load your profile.")))
+    }, [])
 
     if (isLoading) {
         return <main className="min-h-screen bg-[linear-gradient(135deg,#eefafa_0%,var(--plumarks-background)_52%,#f1f8f8_100%)] px-4 py-5 font-sans text-text sm:px-8 sm:py-8"><div className="mx-auto max-w-[1120px]"><Topbar /><PageSkeleton /></div></main>
@@ -32,12 +44,6 @@ export function ProfilePage() {
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        if (profileImage) {
-            localStorage.setItem("plumarks-profile-image", profileImage)
-        } else {
-            localStorage.removeItem("plumarks-profile-image")
-        }
-        window.dispatchEvent(new Event("plumarks-profile-image-updated"))
         setSaved(true)
         setCurrentPassword("")
         setNewPassword("")
@@ -134,7 +140,7 @@ export function ProfilePage() {
                         <p className="mb-7 text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[#8ee1df]">Your progress</p>
                         <div className="mb-7 grid grid-cols-2 gap-3">
                             <div className="rounded-[12px] bg-white/10 p-4">
-                                <p className="m-0 font-serif text-[2rem]">0</p>
+                                <p className="m-0 font-serif text-[2rem]">{subjects.length}</p>
                                 <p className="m-1 m-0 text-[0.75rem] text-[#c7e8e8]">Subjects</p>
                             </div>
                             <div className="rounded-[12px] bg-white/10 p-4">
@@ -142,6 +148,7 @@ export function ProfilePage() {
                                 <p className="m-1 m-0 text-[0.75rem] text-[#c7e8e8]">Average</p>
                             </div>
                         </div>
+                        {userError && <p className="m-0 mb-3 text-[0.82rem] text-[#ffd2d2]">{userError}</p>}
                         <p className="m-0 text-[0.9rem] leading-[1.7] text-[#c7e8e8]">Your dashboard will start taking shape as you add subjects and record marks.</p>
                         <Link to="/subjects" className="mt-6 inline-block text-[0.82rem] font-bold text-white underline decoration-[#8ee1df] underline-offset-4">Set up your first subject</Link>
                     </aside>

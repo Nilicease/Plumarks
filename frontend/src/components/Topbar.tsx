@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { NavLink, Link, useNavigate } from "react-router-dom"
 import { BookOpen, Bug, ChevronDown, ClipboardList, LayoutDashboard, LogOut, Moon, Plus, Sun, UserRound } from "lucide-react"
+import { logoutUser } from "../services/authServices"
 
 const navItems = [
     { label: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -15,24 +16,20 @@ export function Topbar() {
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
     const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
     const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("plumarks-theme") === "dark")
-    const [profileImage, setProfileImage] = useState<string | null>(() => localStorage.getItem("plumarks-profile-image"))
+    const [profileImage] = useState<string | null>(null)
 
     useEffect(() => {
         document.documentElement.classList.toggle("dark", isDarkMode)
         localStorage.setItem("plumarks-theme", isDarkMode ? "dark" : "light")
     }, [isDarkMode])
 
-    useEffect(() => {
-        function updateProfileImage() {
-            setProfileImage(localStorage.getItem("plumarks-profile-image"))
-        }
-
-        window.addEventListener("plumarks-profile-image-updated", updateProfileImage)
-        return () => window.removeEventListener("plumarks-profile-image-updated", updateProfileImage)
-    }, [])
-
-    function handleLogout() {
+    async function handleLogout() {
         setIsProfileMenuOpen(false)
+        try {
+            await logoutUser()
+        } finally {
+            localStorage.removeItem("plumarks-token")
+        }
         navigate("/login")
     }
 

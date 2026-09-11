@@ -3,9 +3,13 @@ import { Button } from "../components/ui/Button"
 import { DatePicker } from "../components/ui/DatePicker"
 import { Input } from "../components/ui/Input"
 import { useRegister } from "../hooks/useRegister";
-import { RegisterUser } from "../services/authServices";
+import { getApiErrorMessage, registerUser } from "../services/authServices";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function RegisterPage() {
+    const navigate = useNavigate();
+    const [requestError, setRequestError] = useState("");
 
     const [
         email,
@@ -25,6 +29,12 @@ export function RegisterPage() {
         isValid,
         touched,
         touchField,
+        university,
+        setUniversity,
+        errorUniversity,
+        birthday,
+        setBirthday,
+        errorBirthday,
     ] = useRegister()
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -36,7 +46,24 @@ export function RegisterPage() {
             return;
         }
 
-        await RegisterUser(name.trim(), age, email.trim(), password, passwordconfirmed);
+        setRequestError("");
+        const nameParts = name.trim().split(/\s+/);
+
+        try {
+            await registerUser({
+                firstname: nameParts[0] ?? "",
+                lastname: nameParts.slice(1).join(" ") || nameParts[0] || "",
+                email: email.trim(),
+                university: university.trim(),
+                birthday,
+                password,
+                password_confirmation: passwordconfirmed,
+            });
+
+            navigate("/login");
+        } catch (requestErrorValue) {
+            setRequestError(getApiErrorMessage(requestErrorValue, "Unable to create your account."));
+        }
     }
 
     return (
@@ -62,8 +89,13 @@ export function RegisterPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                         <label className="font-sans text-[0.82rem] font-bold" htmlFor="register-year">Date of birth</label>
-                        <DatePicker onAgeChange={setAge} onBlur={() => touchField("age")} />
-                        <p className="m-0 min-h-[17px] font-sans text-[0.76rem] text-danger">{touched.age && age <= 0 ? "Date of birth is required" : ""}</p>
+                        <DatePicker onAgeChange={setAge} onDateChange={setBirthday} onBlur={() => { touchField("age"); touchField("birthday") }} />
+                        <p className="m-0 min-h-[17px] font-sans text-[0.76rem] text-danger">{touched.age || touched.birthday ? (errorBirthday || (age <= 0 ? "Date of birth is required" : "")) : ""}</p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <label className="font-sans text-[0.82rem] font-bold" htmlFor="register-university">University</label>
+                        <Input id="register-university" type="text" placeholder="Your university" required={true} value={university} onChange={(event) => setUniversity(event.target.value)} onBlur={() => touchField("university")} />
+                        <p className="m-0 min-h-[17px] font-sans text-[0.76rem] text-danger">{touched.university ? errorUniversity : ""}</p>
                     </div>
                     <div className="flex flex-col gap-2">
                         <label className="font-sans text-[0.82rem] font-bold" htmlFor="register-email">Email address</label>
@@ -81,6 +113,7 @@ export function RegisterPage() {
                         <p className="m-0 min-h-[17px] font-sans text-[0.76rem] text-danger">{touched.passwordconfirmed ? errorPasswordConfirmed : ""}</p>
                     </div>
                     <Button placeholder="Create account" />
+                    <p className="m-0 min-h-[17px] text-center font-sans text-[0.76rem] text-danger">{requestError}</p>
                 </form>
                 <p className="m-0 mt-6 text-center font-sans text-[0.9rem] leading-[1.5] text-text-secondary">Already have an account? <Link className="font-bold text-primary-dark no-underline hover:underline" to="/login">Sign in</Link></p>
             </section>

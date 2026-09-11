@@ -25,19 +25,29 @@ export type GradingCategory = {
     name: string
     weight: number
     subcategories: string[]
+    subcategoryWeights?: Record<string, number>
 }
 
 export type SubjectRecord = {
+    id?: number
     name: string
     teacher: string
     color: string
     categories: GradingCategory[]
 }
 
-export type DashboardSubject = {
+export type ApiGradingCategory = {
+    id: number
     name: string
-    teacher: string
-    grade: number
-    color: string
-    detail: string
+    weight: number
+    subcategories: ApiGradingCategory[]
 }
+
+export type ApiSubject = {
+    id: number
+    name: string
+    teacher: string | null
+    color: string | null
+    categories: ApiGradingCategory[]
+}
+

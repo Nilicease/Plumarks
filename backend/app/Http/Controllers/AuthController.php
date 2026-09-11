@@ -3,95 +3,68 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginAccount;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterAccount;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use Illuminate\Auth\RequestGuard;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 
 class AuthController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(RegisterAccount $request)
     {
-        $credentials = $request->validated();
+        $data = $request->validated();
 
         $user = User::create([
-            'firstname' => $credentials['firstname'],
-            'lastname' => $credentials['lastname'],
-            'email' => $credentials['email'],
-            'university' => $credentials['university'],
-            'birthday' => $credentials['birthday'],
-            'password' => $credentials['password'],
+            'firstname' => $data['firstname'],
+            'lastname' => $data['lastname'],
+            'email' => $data['email'],
+            'university' => $data['university'],
+            'birthday' => $data['birthday'],
+            'password' => $data['password'],
         ]);
 
         return response()->json([
-            'success' => 'Successfully Created Account',
-            'user' => 
-            [
-                'firstname' => $user->firstname,
-                'lastname' => $user->lastname
-            ]
+            'message' => 'Account created successfully.',
+            'data' => new UserResource($user),
         ], 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 
     public function login(LoginAccount $request)
     {
-        $credentials = $request->validated();
+        $data = $request->validated();
+        $user = User::where('email', $data['email'])->first();
 
-        if (!Auth::attempt($credentials)) {
+        if (!$user || !Hash::check($data['password'], $user->password)) {
             return response()->json([
-                'message' => 'Invalid credentials'
+                'message' => 'Invalid credentials.',
             ], 401);
         }
 
-        $user = Auth::user();
-
         return response()->json([
-            'success' => 'Login successful'
-        ], 200);
+            'message' => 'Login successful.',
+            'data' => [
+                'user' => new UserResource($user),
+                'token' => $user->createToken('plumarks-api')->plainTextToken,
+            ],
+        ]);
     }
 
-    public function logout(string $id)
+    public function logout(Request $request)
     {
-        Auth::logout();
+        $request->user()->tokens()->delete();
+        /** @var RequestGuard $guard */
+        $guard = Auth::guard('sanctum');
+        $guard->forgetUser();
 
-        return response()->json([
-            'success' => 'Successfully logged out'
-        ], 200);
+        return response()->noContent();
+    }
+
+    public function user(Request $request): UserResource
+    {
+        return new UserResource($request->user());
     }
 }

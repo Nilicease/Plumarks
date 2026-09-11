@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { FormEvent } from "react"
-import { performanceSubjects } from "../constants/academicData"
 import type { GradeTask, PerformanceSubject } from "../types/academic"
+import { useSubjects } from "./useSubjects"
 
 type EditingTask = {
     subjectName: string
@@ -14,12 +14,13 @@ type PendingDelete = EditingTask & {
 }
 
 export function useTaskManager() {
-    const [subjects, setSubjects] = useState<PerformanceSubject[]>(performanceSubjects)
-    const [openSubjects, setOpenSubjects] = useState<Record<string, boolean>>({ Mathematics: true, Science: true, English: true })
+    const { subjects: configuredSubjects } = useSubjects()
+    const [subjects, setSubjects] = useState<PerformanceSubject[]>([])
+    const [openSubjects, setOpenSubjects] = useState<Record<string, boolean>>({})
     const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({})
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-    const [selectedSubject, setSelectedSubject] = useState(performanceSubjects[0].name)
-    const [selectedCategory, setSelectedCategory] = useState(performanceSubjects[0].categories[0].name)
+    const [selectedSubject, setSelectedSubject] = useState("")
+    const [selectedCategory, setSelectedCategory] = useState("")
     const [selectedSubcategory, setSelectedSubcategory] = useState("")
     const [taskName, setTaskName] = useState("")
     const [earnedScore, setEarnedScore] = useState("")
@@ -27,8 +28,28 @@ export function useTaskManager() {
     const [editingTask, setEditingTask] = useState<EditingTask | null>(null)
     const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
 
-    const currentSubject = subjects.find((subject) => subject.name === selectedSubject) ?? subjects[0]
-    const currentCategory = currentSubject.categories.find((category) => category.name === selectedCategory) ?? currentSubject.categories[0]
+    useEffect(() => {
+        const mapped = configuredSubjects.map((subject): PerformanceSubject => ({
+            name: subject.name,
+            teacher: subject.teacher,
+            grade: 0,
+            color: subject.color,
+            categories: subject.categories.map((category) => ({
+                name: category.name,
+                weight: category.weight,
+                subcategories: category.subcategories,
+                tasks: [],
+            })),
+        }))
+        setSubjects(mapped)
+        if (mapped.length && !mapped.some((subject) => subject.name === selectedSubject)) {
+            setSelectedSubject(mapped[0].name)
+            setSelectedCategory(mapped[0].categories[0]?.name ?? "")
+        }
+    }, [configuredSubjects, selectedSubject])
+
+    const currentSubject = subjects.find((subject) => subject.name === selectedSubject)
+    const currentCategory = currentSubject?.categories.find((category) => category.name === selectedCategory)
     const taskCount = subjects.reduce((total, subject) => total + subject.categories.reduce((categoryTotal, category) => categoryTotal + category.tasks.length, 0), 0)
 
     function toggleSubject(subjectName: string) {
@@ -40,6 +61,7 @@ export function useTaskManager() {
     }
 
     function openTaskModal() {
+        if (!subjects[0]?.categories[0]) return
         setEditingTask(null)
         setSelectedSubject(subjects[0].name)
         setSelectedCategory(subjects[0].categories[0].name)
@@ -63,6 +85,7 @@ export function useTaskManager() {
 
     function handleSubjectChange(subjectName: string) {
         const subject = subjects.find((item) => item.name === subjectName) ?? subjects[0]
+        if (!subject?.categories[0]) return
         setSelectedSubject(subject.name)
         setSelectedCategory(subject.categories[0].name)
         setSelectedSubcategory("")

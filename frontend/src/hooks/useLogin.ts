@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { loginUser } from "../services/authServices";
+import { getApiErrorMessage, loginUser } from "../services/authServices";
+import { useNavigate } from "react-router-dom";
 
 export function useLogin() {
+    const navigate = useNavigate();
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string>("");
@@ -16,12 +18,15 @@ export function useLogin() {
             setError(emailError);
             return;
         }
-        const data = await loginUser(
-            email,
-            password,
-        );
+        setError("");
 
-        console.log(data);
+        try {
+            const response = await loginUser(email.trim(), password);
+            localStorage.setItem("plumarks-token", response.data.token);
+            navigate("/");
+        } catch (requestError) {
+            setError(getApiErrorMessage(requestError, "Unable to sign in. Please check your details."));
+        }
     }
 
     return [

@@ -2,10 +2,11 @@ import { useState } from "react";
 
 type DatePickerProps = {
     onAgeChange: (age: number) => void;
+    onDateChange?: (date: string) => void;
     onBlur: () => void;
 };
 
-export function DatePicker({ onAgeChange, onBlur }: DatePickerProps) {
+export function DatePicker({ onAgeChange, onDateChange, onBlur }: DatePickerProps) {
     const currentYear = new Date().getFullYear();
 
     const [day, setDay] = useState("");
@@ -42,6 +43,7 @@ export function DatePicker({ onAgeChange, onBlur }: DatePickerProps) {
     function handleDateChange(nextYear: string, nextMonth: string, nextDay: string) {
         if (!nextYear || !nextMonth || !nextDay) {
             onAgeChange(0);
+            onDateChange?.("");
             return;
         }
 
@@ -57,6 +59,7 @@ export function DatePicker({ onAgeChange, onBlur }: DatePickerProps) {
         }
 
         onAgeChange(age);
+        onDateChange?.(`${nextYear}-${nextMonth.padStart(2, "0")}-${nextDay.padStart(2, "0")}`);
     }
 
     return (

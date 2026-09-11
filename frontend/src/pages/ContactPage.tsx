@@ -4,7 +4,7 @@ import { Bug, CheckCircle2, Send } from "lucide-react"
 import { Topbar } from "../components/Topbar"
 
 export function ContactPage() {
-    const [email, setEmail] = useState("jane@example.com")
+    const [email, setEmail] = useState("")
     const [page, setPage] = useState("Dashboard")
     const [description, setDescription] = useState("")
     const [sent, setSent] = useState(false)
