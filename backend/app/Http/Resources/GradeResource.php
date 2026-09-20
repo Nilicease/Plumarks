@@ -19,6 +19,7 @@ class GradeResource extends JsonResource
             'id' => $this->id,
             'subject_id' => $this->subject_id,
             'grading_category_id' => $this->grading_category_id,
+            'grading_subcategory_id' => $this->grading_subcategory_id,
             'name' => $this->name,
             'earned_score' => (float) $this->earned_score,
             'possible_score' => $possible,

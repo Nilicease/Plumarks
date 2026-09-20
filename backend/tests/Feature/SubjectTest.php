@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -75,5 +74,29 @@ class SubjectTest extends TestCase
             'categories' => $this->categories(),
         ])->assertNotFound();
         $this->withToken($token)->deleteJson("/api/subjects/{$subject->id}")->assertNotFound();
+    }
+
+    public function test_user_can_update_and_delete_a_subject(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+        $subject = $this->withToken($token)->postJson('/api/subjects', [
+            'name' => 'Mathematics',
+            'categories' => $this->categories(),
+        ])->assertCreated()->json('data');
+
+        $updatedCategories = [['name' => 'Final exam', 'weight' => 100]];
+        $this->withToken($token)->putJson("/api/subjects/{$subject['id']}", [
+            'name' => 'Advanced Mathematics',
+            'teacher' => 'Mr. Cruz',
+            'color' => '#123456',
+            'categories' => $updatedCategories,
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Advanced Mathematics')
+            ->assertJsonPath('data.categories.0.name', 'Final exam');
+
+        $this->withToken($token)->deleteJson("/api/subjects/{$subject['id']}")->assertNoContent();
+        $this->assertDatabaseMissing('subjects', ['id' => $subject['id']]);
     }
 }

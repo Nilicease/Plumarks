@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\LoginAccount;
 use App\Http\Requests\RegisterAccount;
 use App\Http\Resources\UserResource;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Auth\RequestGuard;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -38,10 +39,14 @@ class AuthController extends Controller
         $data = $request->validated();
         $user = User::where('email', $data['email'])->first();
 
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
             return response()->json([
                 'message' => 'Invalid credentials.',
             ], 401);
+        }
+
+        if ($user->is_blocked) {
+            return response()->json(['message' => 'This account has been blocked.'], 403);
         }
 
         return response()->json([
@@ -66,5 +71,21 @@ class AuthController extends Controller
     public function user(Request $request): UserResource
     {
         return new UserResource($request->user());
+    }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (! Hash::check($data['current_password'], $request->user()->password)) {
+            throw ValidationException::withMessages(['current_password' => 'The current password is incorrect.']);
+        }
+
+        $request->user()->update(['password' => $data['password']]);
+
+        return response()->json(['message' => 'Password updated successfully.']);
     }
 }

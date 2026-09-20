@@ -5,6 +5,8 @@ export type User = {
     email: string;
     university: string;
     birthday: string;
+    is_admin: boolean;
+    is_blocked: boolean;
 };
 
 export type AuthResponse = {

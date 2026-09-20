@@ -2,6 +2,9 @@ import { useEffect, useState } from "react"
 import { NavLink, Link, useNavigate } from "react-router-dom"
 import { BookOpen, Bug, ChevronDown, ClipboardList, LayoutDashboard, LogOut, Moon, Plus, Sun, UserRound } from "lucide-react"
 import { logoutUser } from "../services/authServices"
+import { getDashboard } from "../services/dashboardServices"
+import { QuickAddTaskModal } from "./tasks/QuickAddTaskModal"
+import type { ApiSubject } from "../types/academic"
 
 const navItems = [
     { label: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -11,12 +14,28 @@ const navItems = [
     { label: "Profile", to: "/profile", icon: UserRound, mobileOnly: true, profileAction: true },
 ]
 
-export function Topbar() {
+export function Topbar({ onAddTask, onAddSubject }: { onAddTask?: () => void; onAddSubject?: () => void }) {
     const navigate = useNavigate()
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
     const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
     const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("plumarks-theme") === "dark")
     const [profileImage] = useState<string | null>(null)
+    const [isGlobalTaskModalOpen, setIsGlobalTaskModalOpen] = useState(false)
+    const [taskSubjects, setTaskSubjects] = useState<ApiSubject[]>([])
+
+    async function openTaskModal() {
+        if (onAddTask) {
+            onAddTask()
+            return
+        }
+
+        try {
+            setTaskSubjects((await getDashboard()).subjects)
+            setIsGlobalTaskModalOpen(true)
+        } catch {
+            navigate("/tasks")
+        }
+    }
 
     useEffect(() => {
         document.documentElement.classList.toggle("dark", isDarkMode)
@@ -34,14 +53,15 @@ export function Topbar() {
     }
 
     return (
+        <>
         <header className="mobile-topbar mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
             <Link to="/" className="topbar-brand text-[1.45rem] font-serif tracking-[0.02em] text-text no-underline"><span className="text-primary">Plu</span>Marks</Link>
             <nav aria-label="Main navigation" className="mobile-nav order-3 flex w-full items-center gap-1 sm:order-2 sm:w-auto">
                 {navItems.map((item) => item.addAction ? <div key={item.label} className="add-nav-item mobile-add-nav mobile-nav-item relative flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-[0.78rem] font-bold no-underline transition">
                     <button type="button" aria-label="Add subject or task" aria-expanded={isAddMenuOpen} onClick={() => setIsAddMenuOpen((current) => !current)} className="flex flex-col items-center justify-center gap-1 text-white sm:flex-row"><item.icon size={18} strokeWidth={2.4} aria-hidden="true" /><span>{item.label}</span></button>
                     {isAddMenuOpen && <div className="mobile-add-menu absolute bottom-[calc(100%+10px)] left-1/2 w-36 -translate-x-1/2 rounded-[14px] border border-border bg-surface p-1.5 shadow-[0_12px_30px_rgba(15,23,42,0.2)]">
-                        <button type="button" onClick={() => { setIsAddMenuOpen(false); navigate("/subjects") }} className="flex w-full items-center gap-2 rounded-[9px] px-3 py-2.5 text-left text-[0.78rem] font-bold text-text-secondary hover:bg-primary-light hover:text-primary-dark"><BookOpen size={15} aria-hidden="true" />Subject</button>
-                        <button type="button" onClick={() => { setIsAddMenuOpen(false); navigate("/tasks") }} className="flex w-full items-center gap-2 rounded-[9px] px-3 py-2.5 text-left text-[0.78rem] font-bold text-text-secondary hover:bg-primary-light hover:text-primary-dark"><ClipboardList size={15} aria-hidden="true" />Task</button>
+                        <button type="button" onClick={() => { setIsAddMenuOpen(false); if (onAddSubject) onAddSubject(); else navigate("/subjects") }} className="flex w-full items-center gap-2 rounded-[9px] px-3 py-2.5 text-left text-[0.78rem] font-bold text-text-secondary hover:bg-primary-light hover:text-primary-dark"><BookOpen size={15} aria-hidden="true" />Subject</button>
+                        <button type="button" onClick={() => { setIsAddMenuOpen(false); void openTaskModal() }} className="flex w-full items-center gap-2 rounded-[9px] px-3 py-2.5 text-left text-[0.78rem] font-bold text-text-secondary hover:bg-primary-light hover:text-primary-dark"><ClipboardList size={15} aria-hidden="true" />Task</button>
                     </div>}
                 </div> : item.profileAction ? <div key={item.label} className="mobile-profile-nav mobile-only-nav mobile-nav-item relative flex items-center justify-center">
                     <button type="button" aria-label="Open profile menu" aria-expanded={isProfileMenuOpen} onClick={() => setIsProfileMenuOpen((current) => !current)} className="flex flex-col items-center justify-center gap-1 text-[0.65rem] font-bold text-text-secondary"><span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary-dark text-white">{profileImage ? <img src={profileImage} alt="Profile" className="h-full w-full object-cover" /> : <UserRound size={16} aria-hidden="true" />}</span><span>Profile</span></button>
@@ -67,5 +87,7 @@ export function Topbar() {
                 </div>
             </div>
         </header>
+        {isGlobalTaskModalOpen && <QuickAddTaskModal subjects={taskSubjects} onClose={() => setIsGlobalTaskModalOpen(false)} onSaved={async () => undefined} />}
+        </>
     )
 }

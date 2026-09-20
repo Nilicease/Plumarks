@@ -96,4 +96,70 @@ class GradeTest extends TestCase
             ])
             ->assertNotFound();
     }
+
+    public function test_user_can_list_show_update_and_delete_a_grade(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+        $subject = $this->withToken($token)->postJson('/api/subjects', [
+            'name' => 'English',
+            'categories' => [['name' => 'Exam', 'weight' => 100]],
+        ])->assertCreated()->json('data');
+
+        $grade = $this->withToken($token)->postJson("/api/subjects/{$subject['id']}/grades", [
+            'grading_category_id' => $subject['categories'][0]['id'],
+            'name' => 'First exam',
+            'earned_score' => 18,
+            'possible_score' => 20,
+        ])->assertCreated()->json('data');
+
+        $this->withToken($token)
+            ->getJson("/api/subjects/{$subject['id']}/grades")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'First exam');
+
+        $this->withToken($token)
+            ->getJson("/api/grades/{$grade['id']}")
+            ->assertOk()
+            ->assertJsonPath('data.percentage', 90);
+
+        $this->withToken($token)
+            ->putJson("/api/grades/{$grade['id']}", [
+                'grading_category_id' => $subject['categories'][0]['id'],
+                'name' => 'Updated exam',
+                'earned_score' => 19,
+                'possible_score' => 20,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Updated exam')
+            ->assertJsonPath('data.percentage', 95);
+
+        $this->withToken($token)->deleteJson("/api/grades/{$grade['id']}")->assertNoContent();
+        $this->assertDatabaseMissing('grades', ['id' => $grade['id']]);
+    }
+
+    public function test_grade_cannot_be_assigned_to_a_parent_category(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+        $subject = $this->withToken($token)->postJson('/api/subjects', [
+            'name' => 'Science',
+            'categories' => [[
+                'name' => 'Activities',
+                'weight' => 100,
+                'subcategories' => [['name' => 'Quiz', 'weight' => 100]],
+            ]],
+        ])->assertCreated()->json('data');
+
+        $this->withToken($token)
+            ->postJson("/api/subjects/{$subject['id']}/grades", [
+                'grading_category_id' => $subject['categories'][0]['id'],
+                'name' => 'Invalid parent grade',
+                'earned_score' => 5,
+                'possible_score' => 10,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Grades must belong to a category without sub-categories.');
+    }
 }

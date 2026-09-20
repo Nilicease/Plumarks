@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL ?? "https://r21qk9g6-8000.asse.devtunnels.ms/",
+    baseURL: import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000",
     withCredentials: true,
     withXSRFToken: true,
 });

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom"
 import { Topbar } from "../components/Topbar"
 import { PageSkeleton } from "../components/ui/Skeleton"
 import { useAsyncPageLoading } from "../hooks/useAsyncPageLoading"
-import { getAuthenticatedUser, getApiErrorMessage } from "../services/authServices"
+import { changePassword, getAuthenticatedUser, getApiErrorMessage } from "../services/authServices"
 import { useSubjects } from "../hooks/useSubjects"
 
 function getInitials(name: string) {
@@ -42,11 +42,19 @@ export function ProfilePage() {
         return <main className="min-h-screen bg-[linear-gradient(135deg,#eefafa_0%,var(--plumarks-background)_52%,#f1f8f8_100%)] px-4 py-5 font-sans text-text sm:px-8 sm:py-8"><div className="mx-auto max-w-[1120px]"><Topbar /><PageSkeleton /></div></main>
     }
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        setSaved(true)
-        setCurrentPassword("")
-        setNewPassword("")
+        setUserError("")
+        try {
+            if (newPassword || currentPassword) {
+                await changePassword(currentPassword, newPassword)
+                setCurrentPassword("")
+                setNewPassword("")
+            }
+            setSaved(true)
+        } catch (error) {
+            setUserError(getApiErrorMessage(error, "Unable to update your password."))
+        }
     }
 
     function clearSaved() {

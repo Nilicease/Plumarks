@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
             $table->foreignId('grading_category_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('grading_subcategory_id')->nullable()->constrained('grading_categories')->nullOnDelete();
             $table->string('name');
             $table->decimal('earned_score', 8, 2);
             $table->decimal('possible_score', 8, 2);

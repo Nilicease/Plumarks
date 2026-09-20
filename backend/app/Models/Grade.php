@@ -13,6 +13,7 @@ class Grade extends Model
     protected $fillable = [
         'subject_id',
         'grading_category_id',
+        'grading_subcategory_id',
         'name',
         'earned_score',
         'possible_score',

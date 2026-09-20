@@ -5,9 +5,10 @@ import { RegisterPage } from "./pages/RegisterPage"
 import { SubjectSetupPage } from "./pages/SubjectSetupPage"
 import { ProfilePage } from "./pages/ProfilePage"
 import { DashboardPage } from "./pages/DashboardPage"
-import { TasksPage } from "./pages/SubjectsPage"
+import { TasksPage } from "./pages/TasksPage"
 import { SubjectsPage } from "./pages/SubjectsDirectoryPage"
 import { ContactPage } from "./pages/ContactPage"
+import { AdminPage } from "./pages/AdminPage"
 import { ProtectedRoute } from "./components/common/ProtectedRoute"
 
 function protectedPage(element: ReactElement) {
@@ -26,6 +27,7 @@ function App() {
                 <Route path="/subjects/new" element={protectedPage(<SubjectSetupPage />)} />
                 <Route path="/profile" element={protectedPage(<ProfilePage />)} />
                 <Route path="/contact" element={protectedPage(<ContactPage />)} />
+                <Route path="/admin" element={protectedPage(<AdminPage />)} />
             </Routes>
         </BrowserRouter>
     )

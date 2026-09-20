@@ -20,7 +20,13 @@ export function useSubjects() {
         }
     }, [])
 
-    useEffect(() => { void loadSubjects() }, [loadSubjects])
+    useEffect(() => {
+        const loadAfterMount = window.setTimeout(() => {
+            void loadSubjects()
+        }, 0)
+
+        return () => window.clearTimeout(loadAfterMount)
+    }, [loadSubjects])
 
     async function saveSubject(subject: SubjectRecord, editingId?: number): Promise<void> {
         const saved = editingId ? await updateSubject(editingId, subject) : await createSubject(subject)

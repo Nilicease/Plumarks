@@ -19,12 +19,14 @@ export function TasksPage() {
   const isLoading = useAsyncPageLoading();
   const {
     subjects,
+    isLoading: isPerformanceLoading,
+    error: performanceError,
     openSubjects,
     openCategories,
     isTaskModalOpen,
     selectedSubject,
     selectedCategory,
-    selectedSubcategory,
+    selectedSubcategoryId,
     taskName,
     earnedScore,
     possibleScore,
@@ -34,7 +36,7 @@ export function TasksPage() {
     currentCategory,
     taskCount,
     setIsTaskModalOpen,
-    setSelectedSubcategory,
+    handleSubcategoryChange,
     setTaskName,
     setEarnedScore,
     setPossibleScore,
@@ -56,7 +58,7 @@ export function TasksPage() {
       )
     : null;
 
-  if (isLoading) {
+  if (isLoading || isPerformanceLoading) {
     return (
       <main className="min-h-screen bg-[linear-gradient(135deg,#eefafa_0%,var(--plumarks-background)_52%,#f1f8f8_100%)] px-4 py-5 font-sans text-text sm:px-8 sm:py-8">
         <div className="mx-auto max-w-[1120px]">
@@ -70,7 +72,7 @@ export function TasksPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#eefafa_0%,var(--plumarks-background)_52%,#f1f8f8_100%)] px-4 py-5 font-sans text-text sm:px-8 sm:py-8">
       <div className="mx-auto max-w-[1120px]">
-        <Topbar />
+        <Topbar onAddTask={openTaskModal} />
 
         <section className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
@@ -88,7 +90,7 @@ export function TasksPage() {
           <button
             type="button"
             onClick={openTaskModal}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[10px] bg-primary px-5 text-[0.84rem] font-bold text-white transition hover:bg-primary-dark"
+            className="hidden min-h-[48px] items-center justify-center gap-2 rounded-[10px] bg-primary px-5 text-[0.84rem] font-bold text-white transition hover:bg-primary-dark sm:inline-flex"
           >
             <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
             Add task
@@ -103,9 +105,9 @@ export function TasksPage() {
             <p className="m-0 text-[0.75rem] font-bold uppercase tracking-[0.1em] text-[#a6d9da]">
               Overall average
             </p>
-            <p className="m-0 mt-3 font-serif text-[3.4rem] leading-none tracking-[-0.06em]">
+            <p className="m-0 mt-3 whitespace-nowrap font-serif text-[3.4rem] leading-none tracking-[-0.06em]">
               {average ?? "—"}
-              <span className="text-[1.7rem] text-[#8ee1df]">
+              <span className="ml-1 text-[2.8rem] tracking-[-0.04em] text-[#8ee1df]">
                 {average === null ? "" : "%"}
               </span>
             </p>
@@ -129,6 +131,11 @@ export function TasksPage() {
         </section>
 
         <section className="space-y-4">
+          {performanceError && (
+            <p className="rounded-[16px] border border-danger/20 bg-danger/5 p-4 text-sm text-danger">
+              {performanceError}
+            </p>
+          )}
           {subjects.length === 0 && (
             <p className="rounded-[16px] border border-border bg-surface p-6 text-sm text-text-secondary">
               No tasks are available yet. Add a subject first, then connect
@@ -265,6 +272,12 @@ export function TasksPage() {
                               <div className="border-t border-border px-4 pb-3">
                                 {category.tasks.map((task, taskIndex) => {
                                   const taskGrade = taskPercentage(task);
+                                  const taskSubcategory =
+                                    category.subcategories.find(
+                                      (subcategory) =>
+                                        subcategory.id ===
+                                        task.gradingCategoryId,
+                                    );
                                   return (
                                     <div
                                       key={`${task.name}-${taskIndex}`}
@@ -277,9 +290,9 @@ export function TasksPage() {
                                         <span className="block text-[0.83rem]">
                                           {task.name}
                                         </span>
-                                        {task.subcategory && (
+                                        {taskSubcategory && (
                                           <span className="mt-0.5 block text-[0.68rem] text-text-muted">
-                                            {task.subcategory}
+                                            {taskSubcategory.name}
                                           </span>
                                         )}
                                       </span>
@@ -482,7 +495,7 @@ export function TasksPage() {
                 </div>
               </div>
 
-              {currentCategory.subcategories && (
+              {currentCategory.subcategories.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <label
                     className="text-[0.8rem] font-bold"
@@ -495,16 +508,16 @@ export function TasksPage() {
                   </label>
                   <select
                     id="task-subcategory"
-                    value={selectedSubcategory}
+                    value={selectedSubcategoryId}
                     onChange={(event) =>
-                      setSelectedSubcategory(event.target.value)
+                      handleSubcategoryChange(Number(event.target.value))
                     }
                     className="min-h-[48px] rounded-[10px] border border-border bg-[#fbfdfd] px-3 text-[0.9rem] outline-none focus:border-primary focus:shadow-[0_0_0_4px_var(--plumarks-primary-light)]"
                   >
-                    <option value="">Select a sub-category</option>
+                    <option value={0}>Select a sub-category</option>
                     {currentCategory.subcategories.map((subcategory) => (
-                      <option key={subcategory} value={subcategory}>
-                        {subcategory}
+                      <option key={subcategory.id} value={subcategory.id}>
+                        {subcategory.name}
                       </option>
                     ))}
                   </select>

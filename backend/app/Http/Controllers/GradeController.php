@@ -31,6 +31,7 @@ class GradeController extends Controller
 
         $grade = $ownedSubject->grades()->create($request->safe()->only([
             'grading_category_id',
+            'grading_subcategory_id',
             'name',
             'earned_score',
             'possible_score',

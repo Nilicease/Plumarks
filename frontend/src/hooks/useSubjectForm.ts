@@ -52,14 +52,28 @@ export function useSubjectForm(onSave: SaveSubject) {
     }
 
     function addSubcategory(categoryId: number) {
+        const subcategoryId = nextCategoryId
+        setNextCategoryId((current) => current + 1)
         setCategories((current) => current.map((category) => category.id === categoryId
-            ? { ...category, subcategories: [...category.subcategories, "New sub-category"] }
+            ? {
+                ...category,
+                subcategories: [...category.subcategories, {
+                    id: subcategoryId,
+                    name: "New sub-category",
+                    weight: 0,
+                }],
+            }
             : category))
     }
 
-    function updateSubcategory(categoryId: number, index: number, value: string) {
+    function updateSubcategory(categoryId: number, index: number, field: "name" | "weight", value: string) {
         setCategories((current) => current.map((category) => category.id === categoryId
-            ? { ...category, subcategories: category.subcategories.map((item, itemIndex) => itemIndex === index ? value : item) }
+            ? {
+                ...category,
+                subcategories: category.subcategories.map((item, itemIndex) => itemIndex === index
+                    ? { ...item, [field]: field === "weight" ? Number(value) : value }
+                    : item),
+            }
             : category))
     }
 
@@ -71,7 +85,7 @@ export function useSubjectForm(onSave: SaveSubject) {
 
     async function saveSubject(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        if (!subjectName.trim() || !categories.length || totalWeight(categories) !== 100 || categories.some((category) => !category.name.trim())) return
+        if (!subjectName.trim() || !categories.length || totalWeight(categories) !== 100 || categories.some((category) => !category.name.trim() || (category.subcategories.length > 0 && totalWeight(category.subcategories) !== 100))) return
         setSaveError("")
 
         try {
@@ -79,7 +93,13 @@ export function useSubjectForm(onSave: SaveSubject) {
                 name: subjectName.trim(),
                 teacher: teacherName.trim() || "No teacher added",
                 color: "#bc6c25",
-                categories: categories.map((category) => ({ ...category, name: category.name.trim(), subcategories: category.subcategories.filter((item) => item.trim()) })),
+                categories: categories.map((category) => ({
+                    ...category,
+                    name: category.name.trim(),
+                    subcategories: category.subcategories
+                        .filter((item) => item.name.trim())
+                        .map((item) => ({ ...item, name: item.name.trim() })),
+                })),
             }, editingSubjectName)
             setIsModalOpen(false)
             setEditingSubjectName(null)
@@ -98,7 +118,7 @@ export function useSubjectForm(onSave: SaveSubject) {
         categories,
         editingSubjectName,
         saveError,
-        gradingSystemValid: totalWeight(categories) === 100 && categories.length > 0,
+        gradingSystemValid: totalWeight(categories) === 100 && categories.length > 0 && categories.every((category) => category.subcategories.length === 0 || totalWeight(category.subcategories) === 100),
         openModal,
         openEditSubject,
         updateCategory,

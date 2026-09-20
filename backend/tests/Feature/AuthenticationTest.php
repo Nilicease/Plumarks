@@ -69,4 +69,23 @@ class AuthenticationTest extends TestCase
 
         $this->assertNotSame($otherUser->id, $response->json('data.id'));
     }
+
+    public function test_registration_and_login_validate_invalid_credentials(): void
+    {
+        $this->postJson('/api/register', [
+            'firstname' => 'Jane',
+            'lastname' => 'Doe',
+            'email' => 'not-an-email',
+            'password' => 'short',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email', 'password']);
+
+        User::factory()->create(['email' => 'jane@example.com']);
+
+        $this->postJson('/api/login', [
+            'email' => 'jane@example.com',
+            'password' => 'wrong-password',
+        ])->assertUnauthorized();
+    }
 }

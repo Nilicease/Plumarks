@@ -27,6 +27,14 @@ export async function getAuthenticatedUser(): Promise<User> {
     return response.data.data;
 }
 
+export async function changePassword(currentPassword: string, password: string): Promise<void> {
+    await api.put("/api/password", {
+        current_password: currentPassword,
+        password,
+        password_confirmation: password,
+    });
+}
+
 export function getApiErrorMessage(error: unknown, fallback: string): string {
     if (typeof error === "object" && error !== null && "response" in error) {
         const response = (error as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }).response;

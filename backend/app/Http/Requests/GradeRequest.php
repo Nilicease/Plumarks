@@ -17,6 +17,7 @@ class GradeRequest extends FormRequest
     {
         return [
             'grading_category_id' => ['required', 'integer', 'exists:grading_categories,id'],
+            'grading_subcategory_id' => ['nullable', 'integer', 'exists:grading_categories,id'],
             'name' => ['required', 'string', 'max:255'],
             'earned_score' => ['required', 'numeric', 'min:0'],
             'possible_score' => ['required', 'numeric', 'gt:0'],
